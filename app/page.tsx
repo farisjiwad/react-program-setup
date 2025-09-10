@@ -3,6 +3,22 @@
 import { useState } from "react";
 
 export default function Home() {
+  const programTypes = {
+    "1 Registrations": 1,
+    "2 Appointments": 2,
+    "4 Certifications": 4,
+    "8 Consumer": 8,
+    "16 Events": 16,
+    "32 Item Workshop": 32,
+    "64 Session/Cohort": 64,
+    "128 Shopping Cart": 128,
+    "256 ReprocessAfterMerge": 256,
+    "512 Syllabus/Continuous Learning": 512,
+    "1024 Remote Proctoring/BYOP": 1024,
+    "2048 Adaptive": 2048
+  }
+
+
   const [form, setForm] = useState({
     clientName: "",
     contactEmail: "",
@@ -10,10 +26,20 @@ export default function Home() {
     startDate: "",
     notes: "",
   });
+  const [selectedPrograms, setSelectedPrograms] = useState<number[]>([]);
   const [submitted, setSubmitted] = useState(false);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     setForm({ ...form, [e.target.name]: e.target.value });
+  }
+
+  function handleProgramCheckbox(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = Number(e.target.value);
+    if (e.target.checked) {
+      setSelectedPrograms((prev) => [...prev, value]);
+    } else {
+      setSelectedPrograms((prev) => prev.filter((v) => v !== value));
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -58,18 +84,20 @@ export default function Home() {
             </label>
             <label className="flex flex-col gap-1">
               <span className="font-medium text-black">Program Type</span>
-              <select
-                name="programType"
-                value={form.programType}
-                onChange={handleChange}
-                required
-                className="border rounded px-3 py-2 focus:outline-none focus:ring"
-              >
-                <option value="">Select type...</option>
-                <option value="Standard">Standard</option>
-                <option value="Custom">Custom</option>
-                <option value="Pilot">Pilot</option>
-              </select>
+              <div className="border border-2 flex flex-col items-start">
+                {Object.entries(programTypes).map(([name, value]) => (
+                  <label key={name} className="flex items-center gap-2 py-1">
+                    <input
+                      type="checkbox"
+                      value={value}
+                      checked={selectedPrograms.includes(value)}
+                      onChange={handleProgramCheckbox}
+                    />
+                    <span>{name}</span>
+                  </label>
+                ))}
+                <div className="mt-2 text-sm text-gray-700 font-semibold">Sum: {selectedPrograms.reduce((a, b) => a + b, 0)}</div>
+              </div>
             </label>
             <label className="flex flex-col gap-1">
               <span className="font-medium">Start Date</span>
