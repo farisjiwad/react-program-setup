@@ -1,0 +1,106 @@
+Program Manager: Arne
+-----VENDOR-----
+Vendor Name: Internet Testing Systems
+Vendor ID: 4
+-----SPONSOR-----
+SponsorID: [NEW - database team to create)
+Sponsors.Name: The Physician Assistant Education Association
+**Sponsors.FolderName: PAEA
+-----PROGRAM-----
+Programs.Name: PAEA
+**Programs.FolderName: PAEA
+VendorProgramID: PAEA
+Secure Delivery: YES
+Will this program have institutions? YES
+Channel Name: PAEA
+Type of Program (Programs.ProgramAttributes): 1025
+1 Registrations
+2 Appointments
+4 Certifications
+8 Consumer
+16 Events
+32 Item Workshop
+64 Session/Cohort
+128 Shopping Cart
+256 ReprocessAfterMerge
+512 Syllabus/Continuous Learning
+1024 Remote Proctoring/BYOP
+2048 Adaptive
+Estimated Program Volume Per Year: 100,000+
+Database:  Assume PW-PAEA
+** Note for Dev: Check to see if the view ds20_0_ImportLog exists. If it doesn't exist and we do have a corresponding LW database, create the view.
+Program Manager: Arne Lindquist
+Employees that need read-only access to the database:  
+- Brice Wernecke, Jacob Palaith, Carol Feeley, Arne Lindquist, Cat Pratt
+-----ITEM WORKSHOP-----
+Is this program using Item Workshop? Yes
+Should this program be added to existing IW Bank or is this a new IW Bank? 
+Provide IW database name: IW-PAEA
+Provide Bank Description: PAEA
+-----ENCRYPTION KEY-----
+Encryption Key (needed for Gateway clients):
+-- Staging: Copy from ProgramID <what?> or enter new
+-- Production: Copy from ProgramID <what?> or enter new
+-----VUE/CERTIPORT PROGRAMS-----
+VUE Program: NO
+Certiport "BOX" Program: [Yes/No]
+Delivers Results using WTD: [Yes/No] - if yes, configure ResultUpload service
+VUE Billing Terms: If this is a generic VUE program, is pricing tiered or NOT tiered? [Tiered/Not Tiered] (reminder to run sproc to add new program to VUE billing table)
+-----CONTINUOUS LEARNING PROGRAMS-----
+Continuous Learning Program? NO
+**Which "solver" should this program be configured to use? [[ABMS / ITS Generic]]
+-(If ITS Generic, a record must be added to dbo.applicationproperties; ApplicationID where name ='ITS.Syllabus', key='UseITSSolver', value=1).
+- (If “ABMS”, no configuration needed.)
+**What type of registration model will this program use? [[Dynamic / Fixed ]]
+-(If "Fixed", dbo.serviceflags must contain a record where serviceID = (select bitvalue from serviceflag where descriptiontext='ITS.Services.SyllabusFixedForms'))
+-(If "Dynamic", dbo.serviceflags must contain a record where serviceID = (select bitvalue from serviceflag where descriptiontext='ITS.Services.ITS.Services.SyllabusCreateRegistrationsAndCandidateSegments'))
+-----Zoho Setup (mostly for ABMS)-----
+Will client be first-level support AND use Zoho to respond to tickets? [[Yes/No]]
+If yes, what Zoho "Department Name" should be assigned? ]]Department Name]]
+------------------------------------------------------
+Notes for Dev:
+**If this program is using IW, need to set up the connection string.
+**Stats Service and Result Shredder are turned on as part of the program setup.
+** For Certiport BOX programs:
+- Enable Webhooks service
+- Set PW-<db> Programs.Options = 1
+- Add the following to PW-Master.ApplicationProperties:
+ApplicationID = 7, ProgramID = <ProgramID>, Value = /SFTP - Log Files (Certiport)/<Programs.VendorProgramID>
+- Enable Services: VUEResultConfirmationServices, ResultUpload, ResultShredder, IW Webhooks
+- On STAGING only, configure VUEResultConfirmationService to point to VUE's CTT environment
+USE[PW-Master]
+GO
+SELECT *
+FROM ApplicationProperties
+WHERE ApplicationID = 183
+AND [Key] = 'CTTProgramIDs'
+
+** Add MonitorPrograms record for all IW monitors for the new program.
+** Reminder for when we create new databases:
+- Ekta: Update SQL Farms to have new database show up
+- Shani/Lindsay: Verify SQL Farms config
+To turn on the result shredder, run this in the program database:
+DECLARE @RC int
+DECLARE @programID bigint
+EXECUTE @RC = [dbo].[its_ConfigureResultShredder_2_0_Service]
+@programID = <PROGRAM ID>
+GO
+------------------------------------------------------
+Notes for PM:
+- Workflow:
+Carol/Cat for review
+Dev Coordinator for assignment
+Database Dev for review
+If needed, to DBAs to create database(s)
+Database Dev to set up new program
+Cameron to configure Zoho support department
+Shani/Lindsay to create/deploy new program config file
+Back to requestor
+PM Manager tasks:
+Add program PM emails to dbo.ProgramContacts
+Workfront: Set up Program, set up non-project work for program, "setup"--> Custom Forms --> Project Details --> Client/Program Name
+Set up Project in FogBugz, make PM "admin" for project
+Set up Area in Escalation Support in FogBugz
+Add new program to Programs with Metadata spreadsheet (query is programs.sql in data analysis/Programs folder)
+If new contract (request PM access to Sharepoint contracts folder)
+Notify Kyle if there's a new IW database create
