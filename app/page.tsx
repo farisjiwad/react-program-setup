@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const programTypes = {
@@ -42,26 +43,18 @@ export default function Home() {
     }
   }
 
+  const router = useRouter();
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitted(true);
-    // Prepare JSON data
+    // Save form data to localStorage
     const data = {
       ...form,
       selectedPrograms,
       selectedProgramsSum: selectedPrograms.reduce((a, b) => a + b, 0)
     };
-    const json = JSON.stringify(data, null, 2);
-    // Trigger download
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `program-request-${form.clientName || 'client'}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    window.localStorage.setItem('programFormData', JSON.stringify(data));
+    router.push('/processing');
   }
 
   return (
@@ -71,9 +64,6 @@ export default function Home() {
         <p className="mb-6 text-gray-600 text-center">
           Welcome to the ITS New Program Request Form. Please fill out the details below to get started quickly and seamlessly.
         </p>
-        {submitted ? (
-          <div className="text-green-600 text-center font-semibold">Thank you! Your request has been submitted.</div>
-        ) : (
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <label className="flex flex-col gap-1">
               <span className="font-medium text-black">Client Name</span>
@@ -145,7 +135,6 @@ export default function Home() {
               Submit Request
             </button>
           </form>
-        )}
       </div>
     </div>
   );
